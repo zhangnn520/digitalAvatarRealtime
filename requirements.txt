@@ -1,0 +1,8 @@
+opencv_python == 4.6.0.66
+python_speech_features == 0.6
+resampy == 0.2.2
+tensorflow == 1.15.2
+#torch系列库的安装需要到pytorch官网查询具体cuda编译版本的安装命令
+#torch == 1.7.1+cu101
+#torchvision == 0.8.2+cu101
+protobuf==3.20.*
