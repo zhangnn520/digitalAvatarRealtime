@@ -3,6 +3,12 @@ import os
 os.environ['USE_SIMPLE_THREADED_LEVEL3'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
 from loguru import logger
+import git
+
+if not os.path.exists("./DINet"):
+    logger.info("Start downloading DINet...")
+    git.Repo.clone_from("https://github.com/monk-after-90s/DINet.git", "./DINet")
+
 import multiprocessing
 import uvicorn
 from fastapi import FastAPI
