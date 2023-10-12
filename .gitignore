@@ -17,3 +17,4 @@ evaluation/test_filelists/lr*.txt
 test.py
 .run
 log.log
+DINet
