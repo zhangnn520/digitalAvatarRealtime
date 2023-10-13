@@ -1,10 +1,24 @@
 import os
 import glob
 from typing import Dict
+import face_alignment
+import torch
 
 from objects import VideoFrames
 
 video_full_frames: Dict[str, VideoFrames] = {}
+
+fa = None
+
+
+def get_fa():
+    """获取FaceAlignment实例"""
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    global fa
+    if fa is None:
+        fa = face_alignment.FaceAlignment(
+            face_alignment.LandmarksType.TWO_HALF_D, device=device, face_detector='blazeface')
+    return fa
 
 
 def preload_videos():

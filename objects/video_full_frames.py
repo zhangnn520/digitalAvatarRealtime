@@ -1,6 +1,5 @@
 import os
 from typing import List
-import face_alignment
 import torch
 from numpy import ndarray
 import numpy as np
@@ -52,11 +51,10 @@ class VideoFrames:
                 break
             full_frames.append(frame)
         # 人脸68关键点
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        fa = face_alignment.FaceAlignment(
-            face_alignment.LandmarksType.TWO_HALF_D, device=device, face_detector='blazeface')
         full_frames: ndarray = np.stack(full_frames)
         # 批图片人脸遮罩
+        from preprocess import get_fa
+        fa = get_fa()
         batch_landmarks = fa.get_landmarks_from_batch(torch.Tensor(full_frames.transpose(0, 3, 1, 2)))
         # 封装进VideoFullFrame对象
         self.full_frames = [VideoFullFrame(full_frame, landmarks) for full_frame, landmarks in
