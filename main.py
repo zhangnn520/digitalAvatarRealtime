@@ -45,7 +45,7 @@ if __name__ == "__main__":
     develop_mode = os.getenv("PYTHONUNBUFFERED") == "1"
 
     settings = Settings()
-    uvicorn.run("api_server:app",
+    uvicorn.run("main:app",
                 host=settings.host,
                 port=settings.port,
                 log_level="debug" if develop_mode else None,
