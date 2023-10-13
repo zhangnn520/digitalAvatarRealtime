@@ -6,7 +6,7 @@ from loguru import logger
 import git
 
 if not os.path.exists("./DINet"):
-    logger.info("Start downloading DINet...")
+    logger.info("Download DINet...")
     git.Repo.clone_from("https://github.com/monk-after-90s/DINet.git", "./DINet")
 
 import multiprocessing
@@ -28,7 +28,9 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    ...
+    from preprocess import preload_videos
+    # 预加载视频
+    preload_videos()
 
 
 @app.on_event("shutdown")
