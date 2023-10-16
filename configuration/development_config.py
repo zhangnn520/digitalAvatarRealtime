@@ -6,3 +6,5 @@ class Settings(BaseSettings):
     port: int = 6006
 
     fps: float = 25  # 帧率
+    mouth_region_size: int = 256  # help to resize window
+
