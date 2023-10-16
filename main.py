@@ -31,9 +31,11 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    from preprocess import preload_videos
+    from preprocess import preload_videos, load_model
     # 预加载视频
     preload_videos()
+    # 预加载模型到GPU
+    load_model()
 
 
 @app.on_event("shutdown")
