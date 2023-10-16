@@ -13,3 +13,6 @@ pydantic-settings==2.0.3
 GitPython==3.1.37
 python-magic==0.4.27
 face-alignment==1.4.0
+apscheduler==3.10.1
+aiohttp==3.8.5
+librosa==0.7.0
