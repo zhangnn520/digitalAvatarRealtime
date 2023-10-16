@@ -8,12 +8,15 @@ import git
 if not os.path.exists("./DINet"):
     logger.info("Download DINet...")
     git.Repo.clone_from("https://github.com/monk-after-90s/DINet.git", "./DINet")
+import sys
+
+sys.path.append(os.path.abspath("./DINet"))
 
 import multiprocessing
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from config import Settings
+from configuration import Settings
 
 app = FastAPI()
 
