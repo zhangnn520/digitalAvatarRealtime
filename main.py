@@ -28,7 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(inference_video_router, prefix="inference_video")
+app.include_router(inference_video_router, prefix="/inference_video")
 
 
 @app.on_event("startup")
