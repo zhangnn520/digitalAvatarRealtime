@@ -29,6 +29,7 @@ def get_pool_executor():
 
 
 def extract_frames_from_video(video_bytes: bytes):
+    # todo 参考https://chat.openai.com/share/d4f58cc6-2ed8-4bf4-93f7-3de77ff841e1
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
     temp_file.write(video_bytes)
     temp_file.close()
