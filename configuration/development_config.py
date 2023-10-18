@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings
+from utilities.singleton import singleton
 
 
+@singleton
 class Settings(BaseSettings):
     host: str = '0.0.0.0'
     port: int = 6006
