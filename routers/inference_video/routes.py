@@ -4,11 +4,11 @@ import asyncio
 from asyncio import Task
 import uuid
 from typing import Dict
-from routers.helpers import inf_video, delay_rm_video
 import os
 from starlette.responses import FileResponse
 import fnmatch
 from fastapi import HTTPException
+from routers.helpers import inf_video
 
 router = APIRouter()
 
@@ -23,8 +23,7 @@ async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...))
     audio_bytes, video_bytes = await asyncio.gather(audio.read(), video.read())  # 读取音视频数据
     filename, extension = os.path.splitext(video.filename)
     vid = str(uuid.uuid4())  # 视频id
-    inf_video_tasks[vid] = asyncio.create_task(inf_video(vid, filename, video_bytes, audio_bytes))
-    inf_video_tasks[vid].add_done_callback(lambda task: asyncio.create_task(delay_rm_video(300, inf_video_tasks, vid)))
+    inf_video_tasks[vid] = asyncio.create_task(inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid))
     return {"videoId": vid}
 
 
