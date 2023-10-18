@@ -80,3 +80,5 @@ def load_model():
     model.eval()
     # deepspeech模型
     get_DSModel()
+    # face-alignment
+    get_fa()
