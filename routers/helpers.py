@@ -101,32 +101,17 @@ def _pick5frames(res_video_frames_data_pad: ndarray,
     return ref_video_frame, video_size
 
 
-def inf2video_file(ref_video_frame,
-                   vid,
-                   video_name,
-                   video_size,
-                   pad_length,
-                   res_video_landmark_data_pad,
-                   res_video_frames_data_pad,
-                   resize_w,
-                   resize_h,
-                   mouth_region_size,
-                   ds_feature_padding,
-                   model,
-                   audio_data):
+def inf2frames(ref_video_frame,
+               video_size,
+               pad_length,
+               res_video_landmark_data_pad,
+               res_video_frames_data_pad,
+               resize_w,
+               resize_h,
+               mouth_region_size,
+               ds_feature_padding,
+               model) -> List[ndarray]:
     ref_img_tensor = torch.from_numpy(ref_video_frame).permute(2, 0, 1).unsqueeze(0).float().cuda()
-    res_video_dir = f"./result_videos/{vid}"
-    if os.path.exists(res_video_dir):
-        try:
-            shutil.rmtree(res_video_dir)
-        except:
-            ...
-    os.mkdir(res_video_dir)
-
-    res_video_path = os.path.join(res_video_dir, video_name + '_facial_dubbing_add_audio.mp4')
-    if os.path.exists(res_video_path):
-        os.remove(res_video_path)
-
     frames = []
     for clip_end_index in tqdm(range(5, pad_length, 1)):
         crop_flag, crop_radius = compute_crop_radius(
@@ -163,21 +148,7 @@ def inf2video_file(ref_video_frame,
         frame_landmark[33, 0] + crop_radius + crop_radius_1_4,
         :] = pre_frame_resize[:crop_radius * 3, :, :]  # 将推理的面部写回原帧
         frames.append(frame_data)
-    # 添加声音
-    # 创建一个 VideoClip 对象
-    video_clip = ImageSequenceClip(frames, fps=25)
-    # 将音频数据保存到临时文件
-    temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
-    temp_audio_file.write(audio_data)
-    temp_audio_file.close()
-    # 创建一个 AudioFileClip 对象
-    audio_clip = AudioFileClip(temp_audio_file.name)
-    # 将音频添加到视频
-    final_clip = video_clip.set_audio(audio_clip)
-    # 保存最终的视频文件
-    final_clip.write_videofile(res_video_path, codec="libx264", audio_codec="aac")
-    # 删除临时音频文件
-    os.unlink(temp_audio_file.name)
+    return frames
 
 
 async def inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid):
@@ -187,23 +158,84 @@ async def inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid):
         audio_bytes)  # 音频处理为推理所用特征值
     frames_ndarray = await asyncio.get_running_loop().run_in_executor(
         get_pool_executor(), extract_frames_from_video, video_bytes)  # 视频处理 得到视频的帧ndarray表示
-    batch_landmarks = await asyncio.get_running_loop().run_in_executor(
+    batch_landmarks: ndarray = await asyncio.get_running_loop().run_in_executor(
         None,
         lambda frames_ndarray:
         get_fa().get_landmarks_from_batch(torch.Tensor(frames_ndarray.transpose(0, 3, 1, 2))),
         frames_ndarray)
 
+    res_video_frames_data_pad, pred_frames = await asyncio.get_running_loop().run_in_executor(get_pool_executor(),
+                                                                                              inf_video_from_ndarray2frames,
+                                                                                              frames_ndarray,
+                                                                                              get_DINet_model(),
+                                                                                              await ds_feature_fut,
+                                                                                              batch_landmarks)
+    assert res_video_frames_data_pad.shape[0] - 5 == len(pred_frames)
+    # 推理的人脸遮罩 抠图
+    pred_batch_landmarks = await asyncio.get_running_loop().run_in_executor(
+        None,
+        lambda frames_ndarray:
+        get_fa().get_landmarks_from_batch(torch.Tensor(frames_ndarray.transpose(0, 3, 1, 2))),
+        np.stack(pred_frames))
+
+    res_video_dir = f"./result_videos/{vid}"
+    if os.path.exists(res_video_dir):
+        try:
+            shutil.rmtree(res_video_dir)
+        except:
+            ...
+    os.mkdir(res_video_dir)
+    res_video_path = os.path.join(res_video_dir, filename + '_facial_dubbing_add_audio.mp4')
+    if os.path.exists(res_video_path):
+        os.remove(res_video_path)
     await asyncio.get_running_loop().run_in_executor(get_pool_executor(),
-                                                     inf_video_from_ndarray,
-                                                     frames_ndarray,
-                                                     vid,
-                                                     filename,
+                                                     face_join2video_file,
+                                                     pred_frames,
+                                                     pred_batch_landmarks,
+                                                     res_video_frames_data_pad[2:-3],
                                                      audio_bytes,
-                                                     get_DINet_model(),
-                                                     await ds_feature_fut,
-                                                     batch_landmarks)
+                                                     res_video_path)
 
     asyncio.create_task(delay_clear(300, vid, inf_video_tasks))
+
+
+def face_join2video_file(pred_frames, pred_batch_landmarks, org_frames_ndarr, audio_bytes, res_video_path):
+    joined_frames = []
+    for p, points_68, frame_ndarray in zip(pred_frames, pred_batch_landmarks, org_frames_ndarr):
+        if points_68.shape[0] >= 17:
+            face_points = points_68[:17]
+            if points_68.shape[0] >= 25:
+                face_points = np.append(face_points, [points_68[24], points_68[19]], axis=0)
+            face_points = np.stack(face_points).astype(np.int32)
+            # 1. 创建一个长方形遮罩
+            mask = np.zeros(p.shape[:2], dtype=np.uint8)
+            # 2. 使用fillPoly绘制人脸遮罩
+            cv2.fillPoly(mask, [face_points], (255, 255, 255))
+            # 反向遮罩
+            reverse_mask = cv2.bitwise_not(mask)
+            # 3. 使用遮罩提取人脸
+            face_image = cv2.bitwise_and(p, p, mask=mask)
+            # 提取人脸周围
+            face_surrounding = cv2.bitwise_and(frame_ndarray, frame_ndarray, mask=reverse_mask)
+            # 推理出的人脸贴回原帧
+            joined_frame = cv2.add(face_image, face_surrounding[:, :, ::-1])
+            joined_frames.append(joined_frame)
+
+    # 添加声音
+    # 创建一个 VideoClip 对象
+    video_clip = ImageSequenceClip(joined_frames, fps=25)
+    # 将音频数据保存到临时文件
+    temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+    temp_audio_file.write(audio_bytes)
+    temp_audio_file.close()
+    # 创建一个 AudioFileClip 对象
+    audio_clip = AudioFileClip(temp_audio_file.name)
+    # 将音频添加到视频
+    final_clip = video_clip.set_audio(audio_clip)
+    # 保存最终的视频文件
+    final_clip.write_videofile(res_video_path, codec="libx264", audio_codec="aac")
+    # 删除临时音频文件
+    os.unlink(temp_audio_file.name)
 
 
 async def delay_clear(delay_sec: float, vid, inf_video_tasks):
@@ -222,8 +254,10 @@ async def delay_clear(delay_sec: float, vid, inf_video_tasks):
         logger.info(f"Video id:{vid} cleared.")
 
 
-def inf_video_from_ndarray(frames_ndarray, vid: str, video_name: str, audio_bytes: bytes, DINet_model, ds_feature,
-                           batch_landmarks):
+def inf_video_from_ndarray2frames(frames_ndarray,
+                                  DINet_model,
+                                  ds_feature,
+                                  batch_landmarks):
     try:
         res_frame_length = ds_feature.shape[0]
         ds_feature_padding = np.pad(ds_feature, ((2, 2), (0, 0)), mode='edge')
@@ -243,19 +277,11 @@ def inf_video_from_ndarray(frames_ndarray, vid: str, video_name: str, audio_byte
         ref_video_frame, video_size = _pick5frames(res_video_frames_data_pad, res_video_landmark_data_pad, resize_w,
                                                    resize_h)
         ############################################## inference frame by frame ##############################################
-        inf2video_file(
-            ref_video_frame,
-            vid,
-            video_name,
-            video_size,
-            pad_length,
-            res_video_landmark_data_pad,
-            res_video_frames_data_pad,
-            resize_w,
-            resize_h,
-            mouth_region_size,
-            ds_feature_padding,
-            DINet_model,
-            audio_bytes)
+        return res_video_frames_data_pad.copy(), inf2frames(ref_video_frame, video_size, pad_length,
+                                                            res_video_landmark_data_pad,
+                                                            res_video_frames_data_pad, resize_w, resize_h,
+                                                            mouth_region_size,
+                                                            ds_feature_padding,
+                                                            DINet_model)
     except:
         traceback.print_exc()
