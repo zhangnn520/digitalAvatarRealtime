@@ -7,6 +7,7 @@ from DINet.models.DINet import DINet
 from objects import VideoFrames
 from collections import OrderedDict
 from DINet.utils.deep_speech import DeepSpeech
+from loguru import logger
 
 video_full_frames: Dict[str, VideoFrames] = {}
 # 人脸检测
@@ -19,6 +20,7 @@ _DSModel = None
 
 def get_model():
     """获取DINet推理模型"""
+    logger.debug(f"get_model")
     global _model
     _model = DINet(3, 15, 29).cuda()
     pretrained_clip_DINet_path = "./DINet/asserts/clip_training_DINet_256mouth.pth"
@@ -38,6 +40,7 @@ def get_model():
 
 def get_DSModel():
     """获取deepspeech 模型"""
+    logger.debug(f"get_DSModel")
     global _DSModel
     if _DSModel is None:
         deepspeech_model_path = "./DINet/asserts/output_graph.pb"
@@ -50,6 +53,7 @@ def get_DSModel():
 
 def get_fa():
     """获取FaceAlignment实例"""
+    logger.debug(f"get_fa")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     global fa
     if fa is None:
