@@ -172,7 +172,7 @@ async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: 
     # 视频处理 得到视频的帧ndarray表示
     # 音频处理为推理所用特征值 todo 子进程计算，子进程to.cuda
     frames_ndarray, ds_feature = await asyncio.gather(
-        asyncio.get_running_loop().run_in_executor(_pool_executor,
+        asyncio.get_running_loop().run_in_executor(get_pool_executor(),
                                                    extract_frames_from_video,
                                                    video_bytes),
         asyncio.get_running_loop().run_in_executor(None,
@@ -190,7 +190,7 @@ async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: 
     video_landmark_data: np.ndarray = np.stack(batch_landmarks).astype(int)
     ############################################## align frame with driving audio ##############################################从视频无限回环中截取以对齐音频
     res_video_frames_data_pad, res_video_landmark_data_pad = await asyncio.get_running_loop().run_in_executor(
-        _pool_executor, _get_frames_landmarks_pad, frames_ndarray, video_landmark_data, res_frame_length)
+        get_pool_executor(), _get_frames_landmarks_pad, frames_ndarray, video_landmark_data, res_frame_length)
     assert ds_feature_padding.shape[0] == res_video_frames_data_pad.shape[0] == res_video_landmark_data_pad.shape[0]
     pad_length = ds_feature_padding.shape[0]
     ############################################## randomly select 5 reference images ##############################################
@@ -198,7 +198,7 @@ async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: 
     resize_w = int(mouth_region_size + mouth_region_size // 4)
     resize_h = int((mouth_region_size // 2) * 3 + mouth_region_size // 8)
     ref_video_frame, video_size = await asyncio.get_running_loop().run_in_executor(
-        _pool_executor, _pick5frames, res_video_frames_data_pad, res_video_landmark_data_pad, resize_w, resize_h)
+        get_pool_executor(), _pick5frames, res_video_frames_data_pad, res_video_landmark_data_pad, resize_w, resize_h)
     ############################################## inference frame by frame ##############################################
     await asyncio.get_running_loop().run_in_executor(None,
                                                      inf2video_file,
