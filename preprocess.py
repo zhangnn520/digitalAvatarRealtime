@@ -13,29 +13,30 @@ video_full_frames: Dict[str, VideoFrames] = {}
 # 人脸检测
 fa = None
 # 推理模型
-_model = None
+_DINet_model = None
 # deepspeech 模型
 _DSModel = None
 
 
-def get_model():
+def get_DINet_model():
     """获取DINet推理模型"""
-    logger.debug(f"get_model")
-    global _model
-    _model = DINet(3, 15, 29).cuda()
-    pretrained_clip_DINet_path = "./DINet/asserts/clip_training_DINet_256mouth.pth"
-    if not os.path.exists(pretrained_clip_DINet_path):
-        raise FileNotFoundError(
-            'wrong path of pretrained model weight: {}。Reference "https://github.com/monk-after-90s/DINet" to download.'.format(
-                pretrained_clip_DINet_path))
-    state_dict = torch.load(pretrained_clip_DINet_path)['state_dict']['net_g']
-    new_state_dict = OrderedDict()
-    for k, v in state_dict.items():
-        name = k[7:]  # remove module.
-        new_state_dict[name] = v
-    _model.load_state_dict(new_state_dict)
-    _model.eval()
-    return _model
+    global _DINet_model
+    if _DINet_model is None:
+        logger.debug(f"load DINet model")
+        _DINet_model = DINet(3, 15, 29).cuda()
+        pretrained_clip_DINet_path = "./DINet/asserts/clip_training_DINet_256mouth.pth"
+        if not os.path.exists(pretrained_clip_DINet_path):
+            raise FileNotFoundError(
+                'wrong path of pretrained model weight: {}。Reference "https://github.com/monk-after-90s/DINet" to download.'.format(
+                    pretrained_clip_DINet_path))
+        state_dict = torch.load(pretrained_clip_DINet_path)['state_dict']['net_g']
+        new_state_dict = OrderedDict()
+        for k, v in state_dict.items():
+            name = k[7:]  # remove module.
+            new_state_dict[name] = v
+        _DINet_model.load_state_dict(new_state_dict)
+        _DINet_model.eval()
+    return _DINet_model
 
 
 def get_DSModel():
@@ -87,7 +88,7 @@ def preload_videos():
 def load_model():
     """加载模型到GPU"""
     # DINet预训练模型
-    get_model()
+    get_DINet_model()
     # deepspeech模型
     get_DSModel()
     # face-alignment

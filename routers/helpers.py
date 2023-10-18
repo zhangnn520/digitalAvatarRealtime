@@ -12,7 +12,7 @@ import cv2
 import torch
 import random
 from loguru import logger
-from preprocess import get_DSModel, get_fa, get_model
+from preprocess import get_DSModel, get_fa, get_DINet_model
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 from typing import Dict
@@ -225,7 +225,7 @@ async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: 
                                                          resize_h,
                                                          mouth_region_size,
                                                          ds_feature_padding,
-                                                         get_model())
+                                                         get_DINet_model())
     except:
         traceback.print_exc()
 
