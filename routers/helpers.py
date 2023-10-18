@@ -18,6 +18,7 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Dict
 from asyncio import Task
 import tempfile
+from moviepy.editor import *
 
 _pool_executor: ProcessPoolExecutor = None
 
@@ -113,7 +114,8 @@ def inf2video_file(ref_video_frame,
                    resize_h,
                    mouth_region_size,
                    ds_feature_padding,
-                   model):
+                   model,
+                   audio_data):
     ref_img_tensor = torch.from_numpy(ref_video_frame).permute(2, 0, 1).unsqueeze(0).float().cuda()
     res_video_dir = f"./temp/{vid}"
     if os.path.exists(res_video_dir):
@@ -123,13 +125,11 @@ def inf2video_file(ref_video_frame,
             ...
     os.mkdir(res_video_dir)
 
-    res_video_path = os.path.join(res_video_dir, video_name + '_facial_dubbing.mp4')
+    res_video_path = os.path.join(res_video_dir, video_name + '_facial_dubbing_add_audio.mp4')
     if os.path.exists(res_video_path):
         os.remove(res_video_path)
-    videowriter = cv2.VideoWriter(res_video_path,
-                                  cv2.VideoWriter_fourcc(*'XVID'),
-                                  25,
-                                  video_size)
+
+    frames = []
     for clip_end_index in tqdm(range(5, pad_length, 1)):
         crop_flag, crop_radius = compute_crop_radius(
             video_size,
@@ -164,17 +164,22 @@ def inf2video_file(ref_video_frame,
         frame_landmark[33, 0] - crop_radius - crop_radius_1_4:
         frame_landmark[33, 0] + crop_radius + crop_radius_1_4,
         :] = pre_frame_resize[:crop_radius * 3, :, :]  # 将推理的面部写回原帧
-        videowriter.write(frame_data[:, :, ::-1])
-    videowriter.release()
-    # todo 添加声音
-    # video_add_audio_path = res_video_path.replace('.mp4', '_add_audio.mp4')
-    # if os.path.exists(video_add_audio_path):
-    #     os.remove(video_add_audio_path)
-    # cmd = 'ffmpeg -i {} -i {} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 {}'.format(
-    #     res_video_path,
-    #     opt.driving_audio_path,
-    #     video_add_audio_path)
-    # subprocess.call(cmd, shell=True)
+        frames.append(frame_data)
+    # 添加声音
+    # 创建一个 VideoClip 对象
+    video_clip = ImageSequenceClip(frames, fps=25)
+    # 将音频数据保存到临时文件
+    temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+    temp_audio_file.write(audio_data)
+    temp_audio_file.close()
+    # 创建一个 AudioFileClip 对象
+    audio_clip = AudioFileClip(temp_audio_file.name)
+    # 将音频添加到视频
+    final_clip = video_clip.set_audio(audio_clip)
+    # 保存最终的视频文件
+    final_clip.write_videofile(res_video_path, codec="libx264", audio_codec="aac")
+    # 删除临时音频文件
+    os.unlink(temp_audio_file.name)
 
 
 async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: bytes):
@@ -225,7 +230,8 @@ async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: 
                                                          resize_h,
                                                          mouth_region_size,
                                                          ds_feature_padding,
-                                                         get_DINet_model())
+                                                         get_DINet_model(),
+                                                         audio_bytes)
     except:
         traceback.print_exc()
 
