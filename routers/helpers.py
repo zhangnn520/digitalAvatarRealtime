@@ -1,5 +1,6 @@
 import asyncio
 import io
+import traceback
 from typing import List
 from configuration.development_config import Settings
 from DINet.utils.data_processing import compute_crop_radius
@@ -177,51 +178,56 @@ def inf2video_file(ref_video_frame,
 
 
 async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: bytes):
-    # 视频处理 得到视频的帧ndarray表示
-    # 音频处理为推理所用特征值 todo 子进程计算，子进程to.cuda
-    frames_ndarray, ds_feature = await asyncio.gather(
-        asyncio.get_running_loop().run_in_executor(get_pool_executor(),
-                                                   extract_frames_from_video,
-                                                   video_bytes),
-        asyncio.get_running_loop().run_in_executor(None,
-                                                   DSModel.compute_audio_feature,
-                                                   io.BytesIO(audio_bytes)))
-    res_frame_length = ds_feature.shape[0]
-    ds_feature_padding = np.pad(ds_feature, ((2, 2), (0, 0)), mode='edge')
-    # 人脸68关键点
-    fa = get_fa()
-    batch_landmarks = await asyncio.get_running_loop().run_in_executor(
-        None,
-        lambda frames: fa.get_landmarks_from_batch(torch.Tensor(frames.transpose(0, 3, 1, 2))),
-        frames_ndarray)
-    batch_landmarks = [landmarks[:68, :] for landmarks in batch_landmarks]
-    video_landmark_data: np.ndarray = np.stack(batch_landmarks).astype(int)
-    ############################################## align frame with driving audio ##############################################从视频无限回环中截取以对齐音频
-    res_video_frames_data_pad, res_video_landmark_data_pad = await asyncio.get_running_loop().run_in_executor(
-        get_pool_executor(), _get_frames_landmarks_pad, frames_ndarray, video_landmark_data, res_frame_length)
-    assert ds_feature_padding.shape[0] == res_video_frames_data_pad.shape[0] == res_video_landmark_data_pad.shape[0]
-    pad_length = ds_feature_padding.shape[0]
-    ############################################## randomly select 5 reference images ##############################################
-    mouth_region_size = Settings().mouth_region_size
-    resize_w = int(mouth_region_size + mouth_region_size // 4)
-    resize_h = int((mouth_region_size // 2) * 3 + mouth_region_size // 8)
-    ref_video_frame, video_size = await asyncio.get_running_loop().run_in_executor(
-        get_pool_executor(), _pick5frames, res_video_frames_data_pad, res_video_landmark_data_pad, resize_w, resize_h)
-    ############################################## inference frame by frame ##############################################
-    await asyncio.get_running_loop().run_in_executor(None,
-                                                     inf2video_file,
-                                                     ref_video_frame,
-                                                     vid,
-                                                     video_name,
-                                                     video_size,
-                                                     pad_length,
-                                                     res_video_landmark_data_pad,
-                                                     res_video_frames_data_pad,
-                                                     resize_w,
-                                                     resize_h,
-                                                     mouth_region_size,
-                                                     ds_feature_padding,
-                                                     model)
+    try:
+        # 视频处理 得到视频的帧ndarray表示
+        # 音频处理为推理所用特征值 todo 子进程计算，子进程to.cuda
+        frames_ndarray, ds_feature = await asyncio.gather(
+            asyncio.get_running_loop().run_in_executor(get_pool_executor(),
+                                                       extract_frames_from_video,
+                                                       video_bytes),
+            asyncio.get_running_loop().run_in_executor(None,
+                                                       get_DSModel().compute_audio_feature,
+                                                       io.BytesIO(
+                                                           audio_bytes)))
+        res_frame_length = ds_feature.shape[0]
+        ds_feature_padding = np.pad(ds_feature, ((2, 2), (0, 0)), mode='edge')
+        # 人脸68关键点
+        fa = get_fa()
+        batch_landmarks = await asyncio.get_running_loop().run_in_executor(
+            None,
+            lambda frames: fa.get_landmarks_from_batch(torch.Tensor(frames.transpose(0, 3, 1, 2))),
+            frames_ndarray)
+        batch_landmarks = [landmarks[:68, :] for landmarks in batch_landmarks]
+        video_landmark_data: np.ndarray = np.stack(batch_landmarks).astype(int)
+        ############################################## align frame with driving audio ##############################################从视频无限回环中截取以对齐音频
+        res_video_frames_data_pad, res_video_landmark_data_pad = await asyncio.get_running_loop().run_in_executor(
+            get_pool_executor(), _get_frames_landmarks_pad, frames_ndarray, video_landmark_data, res_frame_length)
+        assert ds_feature_padding.shape[0] == res_video_frames_data_pad.shape[0] == res_video_landmark_data_pad.shape[0]
+        pad_length = ds_feature_padding.shape[0]
+        ############################################## randomly select 5 reference images ##############################################
+        mouth_region_size = Settings().mouth_region_size
+        resize_w = int(mouth_region_size + mouth_region_size // 4)
+        resize_h = int((mouth_region_size // 2) * 3 + mouth_region_size // 8)
+        ref_video_frame, video_size = await asyncio.get_running_loop().run_in_executor(
+            get_pool_executor(), _pick5frames, res_video_frames_data_pad, res_video_landmark_data_pad, resize_w,
+            resize_h)
+        ############################################## inference frame by frame ##############################################
+        await asyncio.get_running_loop().run_in_executor(None,
+                                                         inf2video_file,
+                                                         ref_video_frame,
+                                                         vid,
+                                                         video_name,
+                                                         video_size,
+                                                         pad_length,
+                                                         res_video_landmark_data_pad,
+                                                         res_video_frames_data_pad,
+                                                         resize_w,
+                                                         resize_h,
+                                                         mouth_region_size,
+                                                         ds_feature_padding,
+                                                         get_model())
+    except:
+        traceback.print_exc()
 
 
 async def delay_rm_video(delay_seconds: float, inf_video_tasks: Dict[str, Task], vid: str):
