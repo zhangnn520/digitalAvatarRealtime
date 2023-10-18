@@ -16,3 +16,4 @@ face-alignment==1.4.0
 apscheduler==3.10.1
 aiohttp==3.8.5
 librosa==0.7.0
+python-multipart==0.0.6
