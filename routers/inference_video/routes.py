@@ -36,7 +36,7 @@ def downloadVideo(vid: str):
     # 触发可能的报错
     inf_video_tasks[vid].result()
 
-    target_dir = f"temp/{vid}"
+    target_dir = f"result_videos/{vid}"
     pattern = '*facial_dubbing_add_audio.mp4'
     matches = []
     for root, dirnames, filenames in os.walk(target_dir):

@@ -115,7 +115,7 @@ def inf2video_file(ref_video_frame,
                    model,
                    audio_data):
     ref_img_tensor = torch.from_numpy(ref_video_frame).permute(2, 0, 1).unsqueeze(0).float().cuda()
-    res_video_dir = f"./temp/{vid}"
+    res_video_dir = f"./result_videos/{vid}"
     if os.path.exists(res_video_dir):
         try:
             shutil.rmtree(res_video_dir)
