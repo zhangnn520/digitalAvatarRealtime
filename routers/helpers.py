@@ -16,6 +16,7 @@ from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 from typing import Dict
 from asyncio import Task
+import tempfile
 
 _pool_executor: ProcessPoolExecutor = None
 
@@ -28,7 +29,11 @@ def get_pool_executor():
 
 
 def extract_frames_from_video(video_bytes: bytes):
-    videoCapture = cv2.VideoCapture(io.BytesIO(video_bytes))
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
+    temp_file.write(video_bytes)
+    temp_file.close()
+
+    videoCapture = cv2.VideoCapture(temp_file.name)
     fps = videoCapture.get(cv2.CAP_PROP_FPS)
     if int(fps) != 25:
         # todo 转25fps
@@ -38,6 +43,8 @@ def extract_frames_from_video(video_bytes: bytes):
     for i in range(int(frames)):
         ret, frame = videoCapture.read()
         frame_ndarrays.append(frame)
+    videoCapture.release()
+    os.unlink(temp_file.name)
     frame_ndarrays: np.ndarray = np.stack(frame_ndarrays)
     return frame_ndarrays
 
