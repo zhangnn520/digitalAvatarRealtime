@@ -14,7 +14,19 @@ fa = None
 # 推理模型
 model = None
 # deepspeech 模型
-DSModel = None
+_DSModel = None
+
+
+def get_DSModel():
+    """获取deepspeech 模型"""
+    global _DSModel
+    if _DSModel is None:
+        deepspeech_model_path = "./DINet/asserts/output_graph.pb"
+        if not os.path.exists(deepspeech_model_path):
+            raise FileNotFoundError(
+                'pls download pretrained model of deepspeech.Reference "https://github.com/monk-after-90s/DINet" to download.')
+        _DSModel = DeepSpeech(deepspeech_model_path)
+    return _DSModel
 
 
 def get_fa():
@@ -67,9 +79,4 @@ def load_model():
     model.load_state_dict(new_state_dict)
     model.eval()
     # deepspeech模型
-    deepspeech_model_path = "./DINet/asserts/output_graph.pb"
-    if not os.path.exists(deepspeech_model_path):
-        raise FileNotFoundError(
-            'pls download pretrained model of deepspeech.Reference "https://github.com/monk-after-90s/DINet" to download.')
-    global DSModel
-    DSModel = DeepSpeech(deepspeech_model_path)
+    get_DSModel()

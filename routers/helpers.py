@@ -11,7 +11,7 @@ import cv2
 import torch
 import random
 from loguru import logger
-from preprocess import DSModel, get_fa, model
+from preprocess import get_DSModel, get_fa, model
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 from typing import Dict
