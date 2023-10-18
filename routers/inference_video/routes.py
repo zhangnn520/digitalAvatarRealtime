@@ -31,6 +31,11 @@ async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...))
 def downloadVideo(vid: str):
     if vid not in inf_video_tasks.keys():
         raise HTTPException(status_code=404, detail="不存在的Video ID")
+    if not inf_video_tasks[vid].done():
+        raise HTTPException(status_code=404, detail="视频文件不存在，因为文件正在合成中")
+    # 触发可能的报错
+    inf_video_tasks[vid].result()
+
     target_dir = f"temp/{vid}"
     pattern = '*facial_dubbing_add_audio.mp4'
     matches = []
@@ -38,9 +43,6 @@ def downloadVideo(vid: str):
         for filename in fnmatch.filter(filenames, pattern):
             matches.append(os.path.join(root, filename))
     if not matches:
-        if inf_video_tasks[vid].done():
-            raise HTTPException(status_code=404, detail="视频文件不存在，因为文件过期")
-        else:
-            raise HTTPException(status_code=404, detail="视频文件不存在，因为文件正在合成中")
+        raise HTTPException(status_code=404, detail="视频文件不存在，因为文件过期")
 
     return FileResponse(matches[0], filename=os.path.basename(matches[0]))
