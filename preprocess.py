@@ -11,7 +11,7 @@ from loguru import logger
 
 video_full_frames: Dict[str, VideoFrames] = {}
 # 人脸检测
-fa = None
+_fa = None
 # 推理模型
 _DINet_model = None
 # deepspeech 模型
@@ -41,9 +41,9 @@ def get_DINet_model():
 
 def get_DSModel():
     """获取deepspeech 模型"""
-    logger.debug(f"get_DSModel")
     global _DSModel
     if _DSModel is None:
+        logger.debug(f"load deepspeech model")
         deepspeech_model_path = "./DINet/asserts/output_graph.pb"
         if not os.path.exists(deepspeech_model_path):
             raise FileNotFoundError(
@@ -54,13 +54,13 @@ def get_DSModel():
 
 def get_fa():
     """获取FaceAlignment实例"""
-    logger.debug(f"get_fa")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    global fa
-    if fa is None:
-        fa = face_alignment.FaceAlignment(
+    global _fa
+    if _fa is None:
+        logger.debug(f"load face_alignment model")
+        _fa = face_alignment.FaceAlignment(
             face_alignment.LandmarksType.TWO_HALF_D, device=device, face_detector='blazeface')
-    return fa
+    return _fa
 
 
 def preload_videos():
