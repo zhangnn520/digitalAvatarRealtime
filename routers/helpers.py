@@ -212,7 +212,7 @@ async def inf_video(vid: str, video_name: str, video_bytes: bytes, audio_bytes: 
             get_pool_executor(), _pick5frames, res_video_frames_data_pad, res_video_landmark_data_pad, resize_w,
             resize_h)
         ############################################## inference frame by frame ##############################################
-        await asyncio.get_running_loop().run_in_executor(None,
+        await asyncio.get_running_loop().run_in_executor(get_pool_executor(),
                                                          inf2video_file,
                                                          ref_video_frame,
                                                          vid,
