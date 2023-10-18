@@ -21,5 +21,5 @@ async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...))
     filename, extension = os.path.splitext(video.filename)
     vid = str(uuid.uuid4())  # 视频id
     inf_video_tasks[vid] = asyncio.create_task(inf_video(vid, filename, video_bytes, audio_bytes))
-    inf_video_tasks[vid].add_done_callback(lambda task: delay_rm_video(300, inf_video_tasks, vid))
+    inf_video_tasks[vid].add_done_callback(lambda task: asyncio.create_task(delay_rm_video(300, inf_video_tasks, vid)))
     return {"videoId": vid}
