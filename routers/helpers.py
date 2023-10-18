@@ -65,7 +65,7 @@ def _get_frames_landmarks_pad(frames_ndarray: ndarray, video_landmark_data: ndar
         divisor = res_frame_length // video_frames_data_cycle_length
         remainder = res_frame_length % video_frames_data_cycle_length
         res_video_frames_data = np.concatenate(
-            [video_frames_data_cycle] * divisor + video_frames_data_cycle[:remainder], 0)
+            [video_frames_data_cycle] * divisor + [video_frames_data_cycle[:remainder]], 0)
         res_video_landmark_data = np.concatenate(
             [video_landmark_data_cycle] * divisor + [video_landmark_data_cycle[:remainder, :, :]], 0)
     res_video_frames_data_pad: ndarray = np.pad(res_video_frames_data, ((2, 2), (0, 0), (0, 0), (0, 0)), mode='edge')
