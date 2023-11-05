@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import List
 import torch
 from numpy import ndarray
@@ -34,7 +35,7 @@ class VideoFrames:
         if self.fps != float(settings.fps) or 'video/mp4' not in magic.Magic(mime=True).from_file(
                 self.video_path):  # 修改帧率 和 类型
             video_stream.release()
-            tmp_file = os.path.join(os.getcwd(), "temp", file_name_without_ext + f"_{settings.fps}fps.mp4")
+            tmp_file = os.path.join("/dev/shm", file_name_without_ext + f"_{settings.fps}fps_{uuid.uuid4()}.mp4")
             # 转帧率和类型
             command = f'ffmpeg -i {self.video_path} -r {settings.fps} {tmp_file} -y'
             subprocess.call(command, shell=platform.system() != 'Windows')
