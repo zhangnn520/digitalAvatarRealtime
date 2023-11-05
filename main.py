@@ -23,6 +23,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from configuration import Settings
 from routers.inference_video1 import router as inference_video_router1
+from routers.inference_video2 import router as inference_video_router2
 
 app = FastAPI()
 
@@ -34,6 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(inference_video_router1, prefix="/inferenceVideoV1")
+app.include_router(inference_video_router2, prefix="/inferenceVideoV2")
 
 
 @app.on_event("startup")
