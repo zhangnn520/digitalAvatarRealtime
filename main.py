@@ -17,7 +17,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from configuration import Settings
-from routers.inference_video import router as inference_video_router
+from routers.inference_video1 import router as inference_video_router1
 
 app = FastAPI()
 
@@ -28,7 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(inference_video_router, prefix="/inferenceVideo")
+app.include_router(inference_video_router1, prefix="/inferenceVideo")
 
 
 @app.on_event("startup")
