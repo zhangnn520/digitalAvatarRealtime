@@ -8,6 +8,10 @@ import git
 if not os.path.exists("./DINet"):
     logger.info("Download DINet...")
     git.Repo.clone_from("https://github.com/monk-after-90s/DINet.git", "./DINet")
+if not os.path.exists("./wav2lip_288x288"):
+    logger.info("Download wav2lip_288x288...")
+    git.Repo.clone_from("https://github.com/monk-after-90s/wav2lip_288x288.git", "./wav2lip_288x288")
+
 import sys
 
 sys.path.append(os.path.abspath("./DINet"))
