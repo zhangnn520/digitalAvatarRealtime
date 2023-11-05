@@ -15,6 +15,7 @@ if not os.path.exists("./wav2lip_288x288"):
 import sys
 
 sys.path.append(os.path.abspath("./DINet"))
+sys.path.append(os.path.abspath("./wav2lip_288x288"))
 
 import multiprocessing
 import uvicorn
