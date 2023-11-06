@@ -25,7 +25,7 @@ def get_DINet_model():
     """获取DINet推理模型"""
     global _DINet_model
     if _DINet_model is None:
-        logger.debug(f"load DINet model")
+        logger.info(f"load DINet model")
         _DINet_model = DINet(3, 15, 29).cuda()
         pretrained_clip_DINet_path = "./DINet/asserts/clip_training_DINet_256mouth.pth"
         if not os.path.exists(pretrained_clip_DINet_path):
@@ -59,7 +59,7 @@ def get_DSModel():
     """获取deepspeech 模型"""
     global _DSModel
     if _DSModel is None:
-        logger.debug(f"load deepspeech model")
+        logger.info(f"load deepspeech model")
         deepspeech_model_path = "./DINet/asserts/output_graph.pb"
         if not os.path.exists(deepspeech_model_path):
             raise FileNotFoundError(
@@ -73,7 +73,7 @@ def get_fa():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     global _fa
     if _fa is None:
-        logger.debug(f"load face_alignment model")
+        logger.info(f"load face_alignment model")
         _fa = face_alignment.FaceAlignment(
             face_alignment.LandmarksType.TWO_HALF_D, device=device, face_detector='blazeface')
     return _fa
