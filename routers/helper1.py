@@ -14,7 +14,7 @@ import tempfile
 from moviepy.editor import *
 import io
 import torch
-from routers.get_process_pool_executor import get_pool_executor
+from routers.global_process_pool_executor import get_pool_executor
 from preprocess import get_DSModel, get_fa, get_DINet_model
 
 

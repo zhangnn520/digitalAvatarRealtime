@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from configuration import Settings
 from routers.inference_video1 import router as inference_video_router1
 from routers.inference_video2 import router as inference_video_router2
+from routers.global_process_pool_executor import ensure_pool_executor_closed
 
 app = FastAPI()
 
@@ -49,7 +50,7 @@ def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    ...
+    ensure_pool_executor_closed()
 
 
 if __name__ == "__main__":
