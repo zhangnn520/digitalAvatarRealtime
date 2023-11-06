@@ -10,22 +10,12 @@ import cv2
 import random
 from loguru import logger
 from tqdm import tqdm
-from concurrent.futures import ProcessPoolExecutor
 import tempfile
 from moviepy.editor import *
 import io
 import torch
-
+from routers.get_process_pool_executor import get_pool_executor
 from preprocess import get_DSModel, get_fa, get_DINet_model
-
-_pool_executor: ProcessPoolExecutor = None
-
-
-def get_pool_executor():
-    global _pool_executor
-    if _pool_executor is None:
-        _pool_executor = ProcessPoolExecutor(max_workers=Settings().max_workers)
-    return _pool_executor
 
 
 def extract_frames_from_video(video_bytes: bytes):
