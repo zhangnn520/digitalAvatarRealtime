@@ -19,3 +19,5 @@ librosa==0.7.0
 python-multipart==0.0.6
 moviepy==1.0.3
 aiofiles==23.2.1
+soundfile==0.12.1
+librosa==0.10.1
