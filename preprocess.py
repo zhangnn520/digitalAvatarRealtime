@@ -49,7 +49,8 @@ def get_Wav2Lip_model():
         logger.info("load Wav2Lip 288×288 model...")
         checkpoint_path = "./wav2lip_288x288/checkpoints/checkpoint_prod.pth"
         if not os.path.exists(checkpoint_path):
-            raise FileNotFoundError(f"File {checkpoint_path} doesn't exist.")
+            raise FileNotFoundError(
+                f"File {checkpoint_path} doesn't exist. Refer to https://github.com/monk-after-90s/wav2lip_288x288.git.")
         _Wav2Lip_model = _load_wav2lip_model(checkpoint_path)
     return _Wav2Lip_model
 
