@@ -8,6 +8,7 @@ from objects import VideoFrames
 from collections import OrderedDict
 from DINet.utils.deep_speech import DeepSpeech
 from loguru import logger
+from wav2lip_288x288.inference import load_model as _load_wav2lip_model
 
 video_full_frames: Dict[str, VideoFrames] = {}
 # 人脸检测
@@ -16,6 +17,8 @@ _fa = None
 _DINet_model = None
 # deepspeech 模型
 _DSModel = None
+# Wav2Lip推理模型
+_Wav2Lip_model = None
 
 
 def get_DINet_model():
@@ -37,6 +40,18 @@ def get_DINet_model():
         _DINet_model.load_state_dict(new_state_dict)
         _DINet_model.eval()
     return _DINet_model
+
+
+def get_Wav2Lip_model():
+    """获取Wav2Lip288推理模型"""
+    global _Wav2Lip_model
+    if _Wav2Lip_model is None:
+        logger.info("load Wav2Lip 288×288 model...")
+        checkpoint_path = "./wav2lip_288x288/checkpoints/checkpoint_prod.pth"
+        if not os.path.exists(checkpoint_path):
+            raise FileNotFoundError(f"File {checkpoint_path} doesn't exist.")
+        _Wav2Lip_model = _load_wav2lip_model(checkpoint_path)
+    return _Wav2Lip_model
 
 
 def get_DSModel():
@@ -93,3 +108,5 @@ def load_model():
     get_DSModel()
     # face-alignment
     get_fa()
+    # Wav2Lip288预训练模型
+    get_Wav2Lip_model()
