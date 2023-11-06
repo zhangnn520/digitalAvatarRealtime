@@ -62,7 +62,7 @@ def get_DSModel():
         deepspeech_model_path = "./DINet/asserts/output_graph.pb"
         if not os.path.exists(deepspeech_model_path):
             raise FileNotFoundError(
-                'pls download pretrained model of deepspeech.Reference "https://github.com/monk-after-90s/DINet" to download.')
+                'pls download pretrained model of deepspeech.Refer to "https://github.com/monk-after-90s/DINet" to download.')
         _DSModel = DeepSpeech(deepspeech_model_path)
     return _DSModel
 
