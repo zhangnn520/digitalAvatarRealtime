@@ -16,28 +16,7 @@ import io
 import torch
 from routers.global_process_pool_executor import get_pool_executor
 from preprocess import get_DSModel, get_fa, get_DINet_model
-
-
-def extract_frames_from_video(video_bytes: bytes):
-    # todo 参考https://chat.openai.com/share/d4f58cc6-2ed8-4bf4-93f7-3de77ff841e1
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
-    temp_file.write(video_bytes)
-    temp_file.close()
-
-    videoCapture = cv2.VideoCapture(temp_file.name)
-    fps = videoCapture.get(cv2.CAP_PROP_FPS)
-    if int(fps) != 25:
-        # todo 转25fps
-        logger.warning('The input video is not 25 fps, it would be better to trans it to 25 fps!')
-    frames = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
-    frame_ndarrays: List[np.ndarray] = []
-    for i in range(int(frames)):
-        ret, frame = videoCapture.read()
-        frame_ndarrays.append(frame)
-    videoCapture.release()
-    os.unlink(temp_file.name)
-    frame_ndarrays: np.ndarray = np.stack(frame_ndarrays)
-    return frame_ndarrays
+from utilities.extract_frames_from_video import extract_frames_from_video_bytes
 
 
 def _get_frames_landmarks_pad(frames_ndarray: ndarray, video_landmark_data: ndarray, res_frame_length: int):
@@ -147,7 +126,7 @@ async def inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid):
         get_DSModel().compute_audio_feature(io.BytesIO(audio_bytes)),
         audio_bytes)  # 音频处理为推理所用特征值
     frames_ndarray = await asyncio.get_running_loop().run_in_executor(
-        get_pool_executor(), extract_frames_from_video, video_bytes)  # 视频处理 得到视频的帧ndarray表示
+        get_pool_executor(), extract_frames_from_video_bytes, video_bytes)  # 视频处理 得到视频的帧ndarray表示
     batch_landmarks: ndarray = await asyncio.get_running_loop().run_in_executor(
         None,
         lambda frames_ndarray:
