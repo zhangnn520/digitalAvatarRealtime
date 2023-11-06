@@ -6,8 +6,12 @@ from loguru import logger
 import uuid
 
 
-def extract_frames_from_video_bytes(video_bytes: bytes):
-    """获取视频二进制数据的ndarray表达形式"""
+def extract_frames_from_video_bytes(video_bytes: bytes, return_list: bool = False):
+    """
+    获取视频二进制数据的ndarray表达形式
+
+    return_list: 是否以列表形式返回结果
+    """
     temp_file_path = os.path.join("/dev/shm", str(uuid.uuid4()) + ".mp4")
     with open(temp_file_path, "wb") as f:
         f.write(video_bytes)
@@ -24,5 +28,7 @@ def extract_frames_from_video_bytes(video_bytes: bytes):
         frame_ndarrays.append(frame)
     videoCapture.release()
     os.remove(temp_file_path)
-    frame_ndarrays: np.ndarray = np.stack(frame_ndarrays)
+
+    if not return_list:
+        frame_ndarrays: np.ndarray = np.stack(frame_ndarrays)
     return frame_ndarrays
