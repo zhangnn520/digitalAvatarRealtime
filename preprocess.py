@@ -122,7 +122,8 @@ def get_pool_executor():
     global _pool_executor
     if _pool_executor is None:
         logger.info(f"instantiate ProcessPoolExecutor")
-        _pool_executor = ProcessPoolExecutor(max_workers=Settings().max_workers)
+        _pool_executor = ProcessPoolExecutor(max_workers=Settings().max_workers,
+                                             mp_context=torch.multiprocessing.get_context("spawn"))
     return _pool_executor
 
 
