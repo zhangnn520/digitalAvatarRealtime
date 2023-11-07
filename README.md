@@ -22,3 +22,7 @@ configuration/development_config.py
 ```shell
 nohup python main.py &
 ```
+
+## 客户端 HTTP API文档
+
+[HTTP API.md](HTTP%20API.md)
