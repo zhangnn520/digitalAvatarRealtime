@@ -153,7 +153,7 @@ async def inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid):
             shutil.rmtree(res_video_dir)
         except:
             ...
-    os.mkdir(res_video_dir)
+    os.makedirs(res_video_dir, exist_ok=True)
     res_video_path = os.path.join(res_video_dir, filename + '_facial_dubbing_add_audio.mp4')
     if os.path.exists(res_video_path):
         os.remove(res_video_path)
