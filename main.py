@@ -35,7 +35,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(inference_video_router1, prefix="/inferenceVideoV1")
+# app.include_router(inference_video_router1, prefix="/inferenceVideoV1")
 app.include_router(inference_video_router2, prefix="/inferenceVideoV2")
 
 
