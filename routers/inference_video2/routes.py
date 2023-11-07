@@ -1,3 +1,5 @@
+import fnmatch
+from starlette.responses import FileResponse
 from fastapi import APIRouter
 from fastapi import UploadFile, File
 import asyncio
@@ -46,3 +48,24 @@ async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...))
     vid = str(uuid.uuid4())  # 视频id
     inf_video_tasks[vid] = asyncio.create_task(inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid))
     return {"videoId": vid}
+
+
+@router.get("/downloadVideo")
+def downloadVideo(vid: str):
+    if vid not in inf_video_tasks.keys():
+        raise HTTPException(status_code=404, detail="不存在的Video ID")
+    if not inf_video_tasks[vid].done():
+        raise HTTPException(status_code=404, detail="视频文件不存在，因为文件正在合成中")
+    # 触发可能的报错
+    inf_video_tasks[vid].result()
+
+    target_dir = f"result_videos/{vid}"
+    pattern = '*.mp4'
+    matches = []
+    for root, dirnames, filenames in os.walk(target_dir):
+        for filename in fnmatch.filter(filenames, pattern):
+            matches.append(os.path.join(root, filename))
+    if not matches:
+        raise HTTPException(status_code=404, detail="视频文件不存在，因为文件过期")
+
+    return FileResponse(matches[0], filename=os.path.basename(matches[0]))
