@@ -214,7 +214,7 @@ async def delay_clear(delay_sec: float, vid, inf_video_tasks):
         await sleep_task
     finally:
         if vid in inf_video_tasks.keys(): inf_video_tasks.pop(vid)
-        res_video_dir = f"/dev/shm/{vid}"
+        res_video_dir = f"./result_videos/{vid}"
         if os.path.exists(res_video_dir):
             try:
                 shutil.rmtree(res_video_dir)
