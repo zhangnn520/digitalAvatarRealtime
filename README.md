@@ -22,3 +22,11 @@ configuration/development_config.py
 ```shell
 nohup python main.py &
 ```
+
+## 客户端 HTTP API文档
+
+浏览器打开：
+
+{hostname}/docs
+
+比如：http://localhost/docs
