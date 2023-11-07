@@ -51,7 +51,8 @@ def get_Wav2Lip_model():
         if not os.path.exists(checkpoint_path):
             raise FileNotFoundError(
                 f"File {checkpoint_path} doesn't exist. Refer to https://github.com/monk-after-90s/wav2lip_288x288.git.")
-        _Wav2Lip_model = _load_wav2lip_model(checkpoint_path)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        _Wav2Lip_model = _load_wav2lip_model(checkpoint_path, device)
     return _Wav2Lip_model
 
 
