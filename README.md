@@ -33,4 +33,4 @@ nohup python main.py &
 
 ## 客户端脚本及更多演示
 
-[scripts/client_sample.py](scripts%2Fclient_sample.py)
+[./scripts](./scripts)
