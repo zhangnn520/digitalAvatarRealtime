@@ -41,6 +41,8 @@ async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...))
             audio_bytes = await f.read()
         os.remove(f"{tmp_audio_path}.wav")
     filename, extension = os.path.splitext(video.filename)
+    if extension != ".mp4":
+        raise HTTPException(status_code=415, detail=f"需要视频格式为mp4")
     vid = str(uuid.uuid4())  # 视频id
     inf_video_tasks[vid] = asyncio.create_task(inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid))
     return {"videoId": vid}
