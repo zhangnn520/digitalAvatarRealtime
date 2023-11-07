@@ -15,6 +15,8 @@ router = APIRouter()
 inf_video_tasks: Dict[str, Task] = {}
 
 
+# todo 参照inference_video2进行优化
+
 @router.post("/uploadAv", summary="接收音频和视频", tags=["音视频"])
 async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...)):
     """
