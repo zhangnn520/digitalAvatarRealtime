@@ -36,34 +36,33 @@ async def inf_video(filename, audio_bytes, video_bytes, inf_video_tasks, vid):
     """
     filename: 文件名（不包括拓展名）
     """
+    face, audio = '', ''
     try:
         # 获得
         face, audio = await asyncio.gather(save_video_bytes_2shm_file(video_bytes),
                                            save_audio_bytes_2shm_file(audio_bytes))
-        try:
-            # 合成的视频结果所在文件夹
-            res_video_dir = f"./result_videos/{vid}"
-            if os.path.exists(res_video_dir):
-                try:
-                    shutil.rmtree(res_video_dir)
-                except:
-                    ...
-            os.makedirs(res_video_dir, exist_ok=True)
+        # 合成的视频结果所在文件夹
+        res_video_dir = f"./result_videos/{vid}"
+        if os.path.exists(res_video_dir):
+            try:
+                shutil.rmtree(res_video_dir)
+            except:
+                ...
+        os.makedirs(res_video_dir, exist_ok=True)
 
-            await asyncio.get_running_loop().run_in_executor(
-                get_pool_executor(),
-                partial(main, face, audio, get_Wav2Lip_model(),
-                        device='cuda' if torch.cuda.is_available() else 'cpu',
-                        outfile=os.path.join(res_video_dir, f"{filename}_result.mp4")))
-
-            asyncio.create_task(delay_clear(300, vid, inf_video_tasks))
-        finally:
-            if os.path.exists(face):
-                os.remove(face)
-            if os.path.exists(audio):
-                os.remove(audio)
+        await asyncio.get_running_loop().run_in_executor(
+            get_pool_executor(),
+            partial(main, face, audio, get_Wav2Lip_model(),
+                    device='cuda' if torch.cuda.is_available() else 'cpu',
+                    outfile=os.path.join(res_video_dir, f"{filename}_result.mp4")))
     except:
         traceback.print_exc()
+    finally:
+        asyncio.create_task(delay_clear(300, vid, inf_video_tasks))
+        if os.path.exists(face):
+            os.remove(face)
+        if os.path.exists(audio):
+            os.remove(audio)
 
 
 async def delay_clear(delay_sec: float, vid, inf_video_tasks):
