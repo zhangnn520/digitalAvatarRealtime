@@ -9,7 +9,7 @@ from typing import Dict
 import os
 from routers.helper2 import inf_video
 from utilities.is_bytes_wav import is_wav
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 import aiofiles
 
 router = APIRouter()
@@ -17,8 +17,33 @@ router = APIRouter()
 inf_video_tasks: Dict[str, Task] = {}
 
 
-@router.post("/uploadAv", summary="接收音频和视频", tags=["音视频"])
-async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...)):
+@router.post("/uploadAv", summary=
+"""
+接收音频和视频，用于数字人视频合成。返回的vid用于获取合成结果。
+Python Demo:
+
+import requests
+
+
+def uploadAv():
+    '''上传音视频'''
+    url = "http://127.0.0.1:6006/inferenceVideoV2/uploadAv"
+
+    audio = "1697513088193.wav"
+    video = "yangshi.mp4"
+
+    files = {'video': open(video, 'rb'), 'audio': open(audio, 'rb')}
+    result = requests.post(url=url, files=files)
+    print(result.text)
+
+
+if __name__ == '__main__':
+    uploadAv()
+
+
+""", tags=["音视频"])
+async def uploadAv(audio: UploadFile = File(..., title="Audio", description="让数字人说话的音频"),
+                   video: UploadFile = File(..., title="Video", description="合成数字人的基础视频")):
     """
     推理视频
     """
@@ -50,8 +75,12 @@ async def uploadAv(audio: UploadFile = File(...), video: UploadFile = File(...))
     return {"videoId": vid}
 
 
-@router.get("/downloadVideo")
-def downloadVideo(vid: str):
+@router.get("/downloadVideo",
+            summary="在浏览器中下载合成的视频，比如直接粘贴URL‘http://127.0.0.1:6006/inferenceVideoV2/downloadVideo?vid=b299784a-854c-4dee-92be-1e9e7755be52’到地址栏然后Enter，正常会触发下载。使用代码下载我就不演示了，原理一样。")
+def downloadVideo(vid: str = Query(title="video id", description="The ID for video downloading")):
+    """
+    下载vid对应的合成视频
+    """
     if vid not in inf_video_tasks.keys():
         raise HTTPException(status_code=404, detail="不存在的Video ID")
     if not inf_video_tasks[vid].done():
