@@ -30,3 +30,7 @@ nohup python main.py &
 {hostname}/docs
 
 比如：http://localhost/docs
+
+## 客户端脚本及更多演示
+
+[scripts/client_sample.py](scripts%2Fclient_sample.py)
