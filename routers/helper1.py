@@ -14,7 +14,7 @@ import tempfile
 from moviepy.editor import *
 import io
 import torch
-from routers.global_process_pool_executor import get_pool_executor
+from preprocess import get_pool_executor
 from preprocess import get_DSModel, get_fa, get_DINet_model
 from utilities.extract_frames_from_video import extract_frames_from_video_bytes
 

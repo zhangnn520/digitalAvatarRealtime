@@ -9,6 +9,8 @@ from collections import OrderedDict
 from DINet.utils.deep_speech import DeepSpeech
 from loguru import logger
 from wav2lip_288x288.inference import load_model as _load_wav2lip_model
+from concurrent.futures import ProcessPoolExecutor
+from configuration.development_config import Settings
 
 video_full_frames: Dict[str, VideoFrames] = {}
 # 人脸检测
@@ -19,6 +21,8 @@ _DINet_model = None
 _DSModel = None
 # Wav2Lip推理模型
 _Wav2Lip_model = None
+# 进程池执行器
+_pool_executor: ProcessPoolExecutor = None
 
 
 def get_DINet_model():
@@ -112,3 +116,17 @@ def load_model():
     get_fa()
     # Wav2Lip288预训练模型
     get_Wav2Lip_model()
+
+
+def get_pool_executor():
+    global _pool_executor
+    if _pool_executor is None:
+        logger.info(f"instantiate ProcessPoolExecutor")
+        _pool_executor = ProcessPoolExecutor(max_workers=Settings().max_workers)
+    return _pool_executor
+
+
+def ensure_pool_executor_closed():
+    """关闭进程池执行器"""
+    if _pool_executor is not None:
+        _pool_executor.shutdown()
