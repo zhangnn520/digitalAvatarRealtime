@@ -74,7 +74,7 @@ def get_DSModel():
 
 
 def get_fa():
-    """获取FaceAlignment实例"""
+    """获取FaceAlignment实例 todo 待废弃"""
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     global _fa
     if _fa is None:
