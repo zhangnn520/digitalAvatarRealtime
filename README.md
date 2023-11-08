@@ -4,7 +4,7 @@
 
 ## 安装
 
-演示在Ubuntu22.04上。
+演示在Ubuntu22.04上，Python3.10.8。
 
 requirements.txt中的torch系列库的安装最好到pytorch官网查询具体cuda编译版本的安装命令。
 
