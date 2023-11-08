@@ -22,7 +22,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from configuration import Settings
-from routers.inference_video1 import router as inference_video_router1
+# from routers.inference_video1 import router as inference_video_router1
 from routers.inference_video2 import router as inference_video_router2
 from preprocess import ensure_pool_executor_closed
 
